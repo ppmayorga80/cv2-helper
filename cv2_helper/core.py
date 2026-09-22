@@ -194,17 +194,19 @@ def imshow(
         title: str,
         img: np.ndarray | Sequence[np.ndarray],
         wait_time: int = 0,
-) -> None:
+) -> int:
     """Display an image or a sequence of images formatted as a grid in an OpenCV window.
 
     Args:
         title: Window title string.
         img: Single image array or sequence of image arrays.
         wait_time: Delay in milliseconds for cv2.waitKey (0 waits indefinitely).
+    Returns:
+        int: the key identifier or -1
     """
     if isinstance(img, np.ndarray):
         cv2.imshow(title, img)
-        cv2.waitKey(wait_time)
+        return cv2.waitKey(wait_time)
     elif isinstance(img, (list, tuple)):
         img_list = list(img)
         rows, cols = _get_quasi_square(len(img_list))
@@ -215,4 +217,6 @@ def imshow(
         full_grid_image = np.vstack([np.hstack(row) for row in grid])
 
         cv2.imshow(title, full_grid_image)
-        cv2.waitKey(wait_time)
+        return cv2.waitKey(wait_time)
+
+    return -1
