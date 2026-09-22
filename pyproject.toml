@@ -29,3 +29,6 @@ build_command = "pip install build && python -m build"
 
 [tool.semantic_release.remote]
 token = "env:GITHUB_TOKEN"
+
+[tool.semantic_release]
+upload_to_vcs_release = true
