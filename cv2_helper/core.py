@@ -193,7 +193,7 @@ def add_labels(
 def imshow(
         title: str,
         img: np.ndarray | Sequence[np.ndarray],
-        wait_time: int = 0,
+        wait_time: int | None = 0,
 ) -> int:
     """Display an image or a sequence of images formatted as a grid in an OpenCV window.
 
@@ -206,7 +206,8 @@ def imshow(
     """
     if isinstance(img, np.ndarray):
         cv2.imshow(title, img)
-        return cv2.waitKey(wait_time)
+        if wait_time is not None:
+            return cv2.waitKey(wait_time)
 
     if isinstance(img, (list, tuple)):
         img_list = list(img)
@@ -218,6 +219,7 @@ def imshow(
         full_grid_image = np.vstack([np.hstack(row) for row in grid])
 
         cv2.imshow(title, full_grid_image)
-        return cv2.waitKey(wait_time)
+        if wait_time is not None:
+            return cv2.waitKey(wait_time)
 
     return -1
