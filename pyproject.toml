@@ -27,5 +27,5 @@ upload_to_pypi = true
 upload_to_release = true
 build_command = "pip install build && python -m build"
 
-[tool.semantic_release.remote.token]
-env = "GH_TOKEN"
+[tool.semantic_release.remote]
+token = "env:GITHUB_TOKEN"
