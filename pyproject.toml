@@ -1,25 +1,28 @@
 [build-system]
-requires = ["setuptools>=61.0.0"]
+requires = ["setuptools>=61.0.0", "setuptools-scm>=8.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "cv2-helper"
-version = "0.1.0"
-description = "Helper library for OpenCV2"
+dynamic = ["version"]
+description = "Una librería auxiliar para OpenCV"
 readme = "README.md"
 authors = [
     { name = "Pedro Mayorga", email = "ppmayorga80@gmail.com" }
 ]
 license = { text = "MIT" }
-classifiers = [
-    "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: MIT License",
-    "Operating System :: OS Independent",
-]
 requires-python = ">=3.8"
 dependencies = [
     "opencv-python>=4.0.0"
 ]
 
-[project.urls]
-Homepage = "https://github.com/ppmayorga80/cv2-helper"
+[tool.setuptools_scm]
+
+[tool.semantic_release]
+version_variables = [
+    "cv2_helper/__init__.py:__version__"
+]
+branch = "main"
+upload_to_pypi = true
+upload_to_release = true
+build_command = "pip install build && python -m build"
