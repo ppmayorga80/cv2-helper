@@ -207,7 +207,8 @@ def imshow(
     if isinstance(img, np.ndarray):
         cv2.imshow(title, img)
         return cv2.waitKey(wait_time)
-    elif isinstance(img, (list, tuple)):
+
+    if isinstance(img, (list, tuple)):
         img_list = list(img)
         rows, cols = _get_quasi_square(len(img_list))
 
