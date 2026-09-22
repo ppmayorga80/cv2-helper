@@ -3,4 +3,4 @@
 from .core import add_borders, add_labels, resize, imshow
 from ._types import TextPos, TextAttr, FitOption, KeyCode
 
-__version__ = "1.3.0"
+__version__ = "1.3.1"
