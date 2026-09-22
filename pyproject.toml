@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=61.0.0", "setuptools-scm>=8.0"]
+requires = ["setuptools>=61.0.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -16,7 +16,8 @@ dependencies = [
     "opencv-python>=4.0.0"
 ]
 
-[tool.setuptools_scm]
+[tool.setuptools.dynamic]
+version = {attr = "cv2_helper.__version__"}
 
 [tool.semantic_release]
 version_variables = [
@@ -26,9 +27,6 @@ build_command = "pip install build && python -m build"
 
 [tool.semantic_release.branches.main]
 match = "main"
-
-[tool.semantic_release.pypi]
-upload = true
 
 [tool.semantic_release.remote]
 type = "github"

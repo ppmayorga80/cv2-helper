@@ -30,13 +30,15 @@ jobs:
           python -m pip install --upgrade pip
           pip install python-semantic-release build twine
 
-      - name: Run Semantic Release
+      - name: Run Semantic Release and Publish to PyPI
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
           semantic-release version
           semantic-release publish
+          twine upload dist/* --skip-existing
