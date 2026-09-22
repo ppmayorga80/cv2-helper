@@ -10,7 +10,7 @@ readme = "README.md"
 authors = [
     { name = "Pedro Mayorga", email = "ppmayorga80@gmail.com" }
 ]
-license = { text = "MIT" }
+license = "MIT"
 requires-python = ">=3.8"
 dependencies = [
     "opencv-python>=4.0.0"
@@ -22,13 +22,14 @@ dependencies = [
 version_variables = [
     "cv2_helper/__init__.py:__version__"
 ]
-branch = "main"
-upload_to_pypi = true
-upload_to_release = true
 build_command = "pip install build && python -m build"
 
-[tool.semantic_release.remote]
-token = "env:GITHUB_TOKEN"
+[tool.semantic_release.branches.main]
+match = "main"
 
-[tool.semantic_release]
-upload_to_vcs_release = true
+[tool.semantic_release.pypi]
+upload = true
+
+[tool.semantic_release.remote]
+type = "github"
+token = "env:GITHUB_TOKEN"
