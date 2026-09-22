@@ -1,0 +1,32 @@
+name: Pylint Quality Check
+
+on:
+  pull_request:
+    branches: [ main, master ]
+    types: [ opened, synchronize, reopened ]
+  release:
+    types: [ published, created ]
+
+jobs:
+  lint:
+    name: Run Pylint Code Analysis
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+
+      - name: Set up Python environment
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pylint numpy opencv-python
+
+      - name: Execute Pylint validation
+        run: |
+          # Enforce strict 10.0 score threshold to allow PR merge
+          pylint --fail-under=10.0 cv2_helper
