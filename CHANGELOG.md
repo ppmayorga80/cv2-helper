@@ -1,9 +1,15 @@
 # CHANGELOG
 
 
+## v1.0.2 (2026-09-22)
+
+
 ## v1.0.1 (2026-09-22)
 
 ### Bug Fixes
+
+- 5
+  ([`0f7011e`](https://github.com/ppmayorga80/cv2-helper/commit/0f7011e09cc47f772ca0a2e48ae0f391997cdcd6))
 
 - Pasar GITHUB_TOKEN correctamente a semantic-release
   ([`9dad8ca`](https://github.com/ppmayorga80/cv2-helper/commit/9dad8ca9acae16cf22bda005d644e0f451a4cf83))
