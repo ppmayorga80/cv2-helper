@@ -32,4 +32,4 @@ upload = true
 
 [tool.semantic_release.remote]
 type = "github"
-token = "env:GITHUB_TOKEN"
+token = "env:GH_TOKEN"
