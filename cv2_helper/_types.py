@@ -1,8 +1,9 @@
 """Type definitions and enumerations for cv2_helper."""
-
 # pylint: disable=no-member,too-many-instance-attributes,too-many-arguments,too-many-positional-arguments,too-few-public-methods,invalid-name
 
 from enum import Enum
+from typing import Any
+
 import cv2
 
 
@@ -63,3 +64,51 @@ class TextAttr:
         self.margin = TextAttr.margin if margin is None else margin
         self.margin_x = self.margin if margin_x is None else margin_x
         self.margin_y = self.margin if margin_y is None else margin_y
+
+
+class KeyCode:
+    """Cross-platform OpenCV key code sets for cv2.waitKeyEx()."""
+
+    ALL = 0
+
+    ESC = (27,)
+    QUIT = (ord("q"), ord("Q"))
+
+    # (Linux GTK, Windows Win32, macOS Cocoa, X11 fallback)
+    LEFT = (65361, 2424832, 63234)
+    UP = (65362, 2490368, 63232)
+    RIGHT = (65363, 2555904, 63235)
+    DOWN = (65364, 2621440, 63233)
+
+    @classmethod
+    def parse_key_codes(cls, codes: Any, valid_codes: set[int]) -> bool:
+        """Extract integer keycodes from ints, strings, KeyCode attributes, or sequences.
+
+        Args:
+            codes: Key code, string, sequence, or KeyCode representation.
+            valid_codes: Set into which resolved integer keycodes are collected.
+
+        Returns:
+            True if KeyCode.ALL is present, False otherwise.
+        """
+        if (codes == cls.ALL or
+                getattr(codes, "value", None) == "ALL" or
+                getattr(codes, "name", None) == "ALL"):
+            return True
+
+        has_all = False
+
+        if isinstance(codes, str):
+            for char in codes:
+                valid_codes.add(ord(char))
+        elif isinstance(codes, int):
+            valid_codes.add(codes)
+        elif isinstance(codes, (list, tuple, set)):
+            for item in codes:
+                if cls.parse_key_codes(item, valid_codes):
+                    has_all = True
+                    break
+        elif hasattr(codes, "value"):
+            has_all = cls.parse_key_codes(codes.value, valid_codes)
+
+        return has_all

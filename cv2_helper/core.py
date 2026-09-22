@@ -2,11 +2,11 @@
 
 # pylint: disable=no-member,too-many-arguments,too-many-positional-arguments,too-many-locals,too-many-branches
 
-from typing import Sequence
+from typing import Sequence, Any
 import cv2
 import numpy as np
 
-from ._types import FitOption, TextAttr
+from ._types import FitOption, TextAttr, KeyCode
 from ._utils import _get_quasi_square, _get_text_info
 
 
@@ -194,6 +194,7 @@ def imshow(
         title: str,
         img: np.ndarray | Sequence[np.ndarray],
         wait_time: int = 0,
+        exit_key_codes: Sequence[KeyCode] | KeyCode = KeyCode.ALL
 ) -> int:
     """Display an image or a sequence of images formatted as a grid in an OpenCV window.
 
@@ -201,12 +202,13 @@ def imshow(
         title: Window title string.
         img: Single image array or sequence of image arrays.
         wait_time: Delay in milliseconds for cv2.waitKey (0 waits indefinitely).
+        exit_key_codes: Single or list of exit key codes.
     Returns:
         int: the key identifier or -1
     """
     if isinstance(img, np.ndarray):
         cv2.imshow(title, img)
-        return cv2.waitKey(wait_time)
+        return wait_key(wait_time, exit_key_codes)
 
     if isinstance(img, (list, tuple)):
         img_list = list(img)
@@ -218,6 +220,43 @@ def imshow(
         full_grid_image = np.vstack([np.hstack(row) for row in grid])
 
         cv2.imshow(title, full_grid_image)
-        return cv2.waitKey(wait_time)
+        return wait_key(wait_time, exit_key_codes)
 
     return -1
+
+
+def wait_key(
+        wait_time: int = 0,
+        exit_key_codes: KeyCode | str | int | Sequence[Any] | None = KeyCode.ALL,
+) -> int:
+    """Wait for key presses within a specified delay or until targeted key codes are received.
+
+    Args:
+        wait_time: Delay in milliseconds for cv2.waitKeyEx. If 0, waits indefinitely.
+        exit_key_codes: KeyCode constant, string(s), int keycode, sequence of codes, or KeyCode.ALL.
+
+    Returns:
+        The integer keycode of the pressed key, or -1 if no valid key was pressed or time elapsed.
+    """
+    result_key = -1
+
+    if wait_time < 0:
+        pass
+    elif exit_key_codes is None:
+        result_key = cv2.waitKeyEx(wait_time)
+    else:
+        valid_codes: set[int] = set()
+        always_exit = KeyCode.parse_key_codes(exit_key_codes, valid_codes)
+
+        if wait_time > 0:
+            key = cv2.waitKeyEx(wait_time)
+            if key != -1 and (always_exit or key in valid_codes):
+                result_key = key
+        else:
+            while True:
+                key = cv2.waitKeyEx(0)
+                if key != -1 and (always_exit or key in valid_codes):
+                    result_key = key
+                    break
+
+    return result_key

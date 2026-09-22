@@ -1,9 +1,8 @@
 import cv2
 import numpy as np
 
-from cv2_helper import imshow, TextPos, TextAttr
-from cv2_helper._types import FitOption
-from cv2_helper.core import add_borders, add_labels, resize
+from cv2_helper import imshow, TextPos, TextAttr, KeyCode
+from cv2_helper import add_borders, add_labels, resize, FitOption
 
 
 def custom_convolution(A, delta=0):
@@ -19,7 +18,7 @@ if __name__ == '__main__':
     G = cv2.cvtColor(cv2.cvtColor(I, cv2.COLOR_BGR2GRAY), cv2.COLOR_GRAY2BGR)
     E = cv2.imread("/Users/pedro/Downloads/fermat.png")
 
-    A = [np.empty((1,1))] * 10
+    A = [np.empty((1, 1))] * 10
     A[0] = I
     A[1] = cv2.GaussianBlur(I, (13, 13), 0)
     A[2] = cv2.bilateralFilter(I, d=0, sigmaColor=10, sigmaSpace=10)
@@ -31,7 +30,7 @@ if __name__ == '__main__':
     A[8] = cv2.bilateralFilter(G, d=0, sigmaColor=10, sigmaSpace=10)
     A[9] = E
 
-    A = resize(A, A[0], fx=0.5, fy=0.5, fit_option=FitOption.FIT_AUTO, fill_color=(255,255,0))
+    A = resize(A, A[0], fx=0.5, fy=0.5, fit_option=FitOption.FIT_AUTO, fill_color=(255, 255, 0))
     A = add_borders(A, border=1, border_color=(255, 255, 255))
     A = add_labels([
         (A[0], "XOrixinalX", TextAttr(org=TextPos.TOP_LEFT)),
@@ -46,6 +45,6 @@ if __name__ == '__main__':
         (A[9], "ABCDEFG", TextAttr(org=TextPos.BOTTOM_CENTER)),
     ])
 
-    imshow("Hello", A)
+    imshow("Hello", A, wait_time=0, exit_key_codes=(KeyCode.QUIT, KeyCode.ESC))
 
     cv2.imwrite("/Users/pedro/Downloads/lion-x.jpg", A[6])
