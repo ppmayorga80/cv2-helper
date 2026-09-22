@@ -45,6 +45,6 @@ if __name__ == '__main__':
         (A[9], "ABCDEFG", TextAttr(org=TextPos.BOTTOM_CENTER)),
     ])
 
-    imshow("Hello", A, wait_time=0, exit_key_codes=(KeyCode.QUIT, KeyCode.ESC))
+    imshow("Hello", A, wait_time=3000, exit_key_codes=(KeyCode.QUIT, KeyCode.ESC))
 
     cv2.imwrite("/Users/pedro/Downloads/lion-x.jpg", A[6])
