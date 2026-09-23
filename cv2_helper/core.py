@@ -127,7 +127,7 @@ def add_borders(
     return img_list
 
 
-def add_labels(
+def add_text(
         imgs: tuple[np.ndarray, str] | tuple[np.ndarray, str, TextAttr] | list[tuple]
 ) -> list[np.ndarray]:
     """Draw text labels onto images based on specified positional and styling attributes.
@@ -190,10 +190,10 @@ def add_labels(
     return images
 
 
-def imshow(
+def _imshow(
         title: str,
         img: np.ndarray | Sequence[np.ndarray],
-        wait_time: int|None = 0,
+        wait_time: int | None = 0,
         exit_key_codes: Sequence[KeyCode] | KeyCode = KeyCode.ALL
 ) -> int:
     """Display an image or a sequence of images formatted as a grid in an OpenCV window.
@@ -225,6 +225,57 @@ def imshow(
             return wait_key(wait_time, exit_key_codes)
 
     return -1
+
+
+def imshow(
+        title: str,
+        img_or_list: np.ndarray | Sequence[np.ndarray | tuple[np.ndarray, str] | tuple[np.ndarray, str, TextAttr]],
+        wait_time: int | None = 0,
+        exit_key_codes: Sequence[KeyCode] | KeyCode = KeyCode.ALL,
+        **kwargs
+):
+    # 1. transform img_or_list to a list of tuples (ndarray,str,TextAttr).
+    img_or_list = [img_or_list] if isinstance(img_or_list, np.ndarray) else img_or_list
+    img_or_list = [
+        (x, "", TextAttr()) if isinstance(x, np.ndarray) else (
+            (x[0], "", TextAttr()) if isinstance(x, (list, tuple)) and len(x) == 1 else (
+                (x[0], x[1], TextAttr()) if isinstance(x, (list, tuple)) and len(x) == 2 else (
+                    (x[0], x[1], x[2])
+                )
+            )
+        )
+        for x in img_or_list
+    ]
+    assert all(isinstance(x[0], np.ndarray) for x in img_or_list)
+    assert all(isinstance(x[1], str) for x in img_or_list)
+    assert all(isinstance(x[2], TextAttr) for x in img_or_list)
+
+    # 2. ensure all images are of the same size
+    first_shape = img_or_list[0][0].shape[0:2]
+    if not all(x[0].shape[0:2] == first_shape for x in img_or_list):
+        imgs = [x[0] for x in img_or_list]
+        imgs = resize(imgs, imgs[0], fx=1.0, fy=1.0, fill_color=(255, 255, 0))
+        img_or_list = [
+            (img, x[1], x[2])
+            for img, x in zip(imgs, img_or_list)
+        ]
+
+    # 3. add labels
+    imgs_with_labels = add_text(img_or_list)
+
+    # 4. ensure we have borders
+    if "border" in kwargs:
+        border = int(kwargs["border"])
+        border_color = kwargs.get("border_color", (255, 255, 255))
+        imgs_with_labels = add_borders(imgs_with_labels, border=border, border_color=border_color)
+
+    rows, cols = _get_quasi_square(len(imgs_with_labels))
+    imgs_with_labels += [np.zeros_like(imgs_with_labels[-1]) for _ in range(rows * cols - len(imgs_with_labels))]
+    grid = [imgs_with_labels[i * cols: (i + 1) * cols] for i in range(rows)]
+    full_grid_image = np.vstack([np.hstack(row) for row in grid])
+    cv2.imshow(title, full_grid_image)
+
+    return wait_key(wait_time, exit_key_codes)
 
 
 def wait_key(
