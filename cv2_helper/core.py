@@ -1,6 +1,6 @@
 """Core image processing helper functions including resizing, borders, labels, and display."""
 
-# pylint: disable=no-member,too-many-arguments,too-many-positional-arguments,too-many-locals,too-many-branches
+# pylint: disable=no-member,too-many-arguments,too-many-positional-arguments,too-many-locals,too-many-branches,line-too-long
 
 from typing import Sequence, Any
 import cv2
@@ -233,7 +233,31 @@ def imshow(
         wait_time: int | None = 0,
         exit_key_codes: Sequence[KeyCode] | KeyCode = KeyCode.ALL,
         **kwargs
-):
+)->int:
+    """The method shows images with labels in a quasi-grid filling spaces with black images
+
+    Args:
+        title: Window title string.
+        img_or_list: Single image array or sequence of image arrays.
+        wait_time: if provided, the time in ms to show image window unless we press a key
+        exit_key_codes: Single or list of exit key codes, default is any key
+        kwargs: includes keys as border:int and border_color:int|tuple[int,int,int]
+
+    Returns:
+        an integer with the key identifier or -1
+
+    Examples:
+        >>> import cv2
+        >>> from cv2_helper import imshow, TextAttr, TextPos
+        >>> A=cv2.imread("lion.jpg")
+        >>> B=cv2.imread("cat.jpg")
+        >>> imshow("CATS",[A,B])
+        >>> imshow("CATS",[(A,"Lion"),B])
+        >>> imshow("CATS",[(A,"Lion"),(B,"Cat")])
+        >>> imshow("CATS",[(A,"Lion"),(B,"Cat",TextAttr(org=TextPos.TOP_CENTER))])
+        >>> imshow("CATS",(A,B),border=1)
+        >>> imshow("CATS",(A,B),border=1, border_color=(0,255,255))
+    """
     # 1. transform img_or_list to a list of tuples (ndarray,str,TextAttr).
     img_or_list = [img_or_list] if isinstance(img_or_list, np.ndarray) else img_or_list
     img_or_list = [
