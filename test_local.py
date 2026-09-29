@@ -1,22 +1,42 @@
 import cv2
-import numpy as np
 
-from cv2_helper import imshow, TextPos, TextAttr, KeyCode
-from cv2_helper import add_borders, add_text, resize, FitOption
+from cv2_helper import imshow, TextPos, TextAttr, KeyCode, PreloadImages
 
 if __name__ == '__main__':
-    A = cv2.imread("/Users/pedro/Downloads/lion.jpg")
-    B = cv2.imread("/Users/pedro/Downloads/cat.jpg")
-    C = cv2.imread("/Users/pedro/Downloads/tiger.jpg")
-    D = cv2.imread("/Users/pedro/Downloads/fermat.png")
-    E = cv2.medianBlur(D, ksize=5)
+    import cv2
+    import numpy as np
+    from cv2_helper import imshow
 
-    imshow("Hello", [
-        (A,),
-        (B, "Cute Cat", TextAttr(org=TextPos.TOP_CENTER)),
-        (C, "Cute Tiger", TextAttr(org=TextPos.TOP_CENTER)),
-        (D, "Cute Fermat", TextAttr(org=TextPos.CENTER, font_scale=2.0)),
-        E
-    ], wait_time=0, exit_key_codes=(KeyCode.QUIT, KeyCode.ESC), border=1)
+    I = PreloadImages.LENA_GRAY
+    K1 = np.array([
+        [1, -1]
+    ])
+    K2 = np.array([
+        [1],
+        [-1]
+    ])
+    K3 = np.array([
+        [0, 1],
+        [-1, 0]
+    ])
+    K4 = np.array([
+        [1, 0],
+        [0, -1]
+    ])
 
-    cv2.imwrite("/Users/pedro/Downloads/lion-x.jpg", A[6])
+    A = cv2.filter2D(I, -1, K1)
+    B = cv2.filter2D(I, -1, K2)
+    C = cv2.filter2D(I, -1, K3)
+    D = cv2.filter2D(I, -1, K4)
+
+    S = A.astype("float32") ** 2 + B.astype("float32") ** 2
+    S = (S / (np.max(S) - np.min(S)) * 255).astype("uint8")
+
+    imshow("", [
+        (I, "Original"),
+        (A, "Derivative in X"),
+        (B, "Derivative in Y"),
+        (C, "Derivative in Diag /"),
+        (D, "Derivative in Diag \\"),
+        (S, "Sobel"),
+    ])
