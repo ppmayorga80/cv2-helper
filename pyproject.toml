@@ -25,6 +25,9 @@ version_variables = [
 ]
 build_command = "pip install build && python -m build"
 
+[tool.setuptools.package-data]
+cv2_helper = ["assets/*"]
+
 [tool.semantic_release.branches.main]
 match = "main"
 

@@ -3,17 +3,20 @@
 
 from enum import Enum
 from typing import Any
-
+from pathlib import Path
 import os
 import cv2
+
+# Get assets path
+ASSETS_DIR = Path(__file__).parent / "assets"
 
 
 class PreloadImages:
     """Preload images using OpenCV preload images API."""
-    # COLOR===================================
-    LION = cv2.imread(os.path.join(os.path.dirname(__file__), "assets", "lion.jpg"))
-    LENA = cv2.imread(os.path.join(os.path.dirname(__file__), "assets", "lena.png"))
-    # GRAY ==================================
+    # COLOR ============================================
+    LION = cv2.imread(str(ASSETS_DIR / "lion.jpg"))
+    LENA = cv2.imread(str(ASSETS_DIR / "lena.png"))
+    # GRAY  ============================================
     LION_GRAY = cv2.cvtColor(LION, cv2.COLOR_BGR2GRAY)
     LENA_GRAY = cv2.cvtColor(LENA, cv2.COLOR_BGR2GRAY)
 
