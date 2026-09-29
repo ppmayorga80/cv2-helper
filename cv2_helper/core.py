@@ -233,7 +233,7 @@ def imshow(
         wait_time: int | None = 0,
         exit_key_codes: Sequence[KeyCode] | KeyCode = KeyCode.ALL,
         **kwargs
-)->int:
+) -> int:
     """The method shows images with labels in a quasi-grid filling spaces with black images
 
     Args:
@@ -258,13 +258,14 @@ def imshow(
         >>> imshow("CATS",(A,B),border=1)
         >>> imshow("CATS",(A,B),border=1, border_color=(0,255,255))
     """
+
     # 1. transform img_or_list to a list of tuples (ndarray,str,TextAttr).
     img_or_list = [img_or_list] if isinstance(img_or_list, np.ndarray) else img_or_list
     img_or_list = [
-        (x, "", TextAttr()) if isinstance(x, np.ndarray) else (
-            (x[0], "", TextAttr()) if isinstance(x, (list, tuple)) and len(x) == 1 else (
-                (x[0], x[1], TextAttr()) if isinstance(x, (list, tuple)) and len(x) == 2 else (
-                    (x[0], x[1], x[2])
+        [x, "", TextAttr()] if isinstance(x, np.ndarray) else (
+            [x[0], "", TextAttr()] if isinstance(x, (list, tuple)) and len(x) == 1 else (
+                [x[0], x[1], TextAttr()] if isinstance(x, (list, tuple)) and len(x) == 2 else (
+                    [x[0], x[1], x[2]]
                 )
             )
         )
@@ -283,6 +284,13 @@ def imshow(
             (img, x[1], x[2])
             for img, x in zip(imgs, img_or_list)
         ]
+
+    # 2.1 ensure all images are BGR
+    for k, _ in enumerate(img_or_list):
+        img = img_or_list[k][0]
+        if img.ndim == 2:
+            img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
+            img_or_list[k][0] = img
 
     # 3. add labels
     imgs_with_labels = add_text(img_or_list)
