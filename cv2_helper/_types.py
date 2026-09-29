@@ -4,7 +4,6 @@
 from enum import Enum
 from typing import Any
 from pathlib import Path
-import os
 import cv2
 
 # Get assets path
