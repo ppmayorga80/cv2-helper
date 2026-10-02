@@ -1,5 +1,4 @@
 """Type definitions and enumerations for cv2_helper."""
-import os.path
 # pylint: disable=no-member,too-many-instance-attributes,too-many-arguments,too-many-positional-arguments,too-few-public-methods,invalid-name
 
 from enum import Enum
@@ -11,24 +10,54 @@ import cv2
 ASSETS_DIR = Path(__file__).parent / "assets"
 
 
+class _LazyImage:
+    """Lazy image, just load images the 1st time they are accessed."""
+
+    def __init__(self, relative_path: str, to_gray: bool = False, to_binary: bool = False):
+        # constructor
+        self.path = ASSETS_DIR / relative_path
+        self.to_gray = to_gray
+        self.to_binary = to_binary
+        self._cached_image = None
+
+    def __get__(self, instance, owner):
+        # accessor
+        if self._cached_image is None:
+            self._cached_image = cv2.imread(str(self.path))
+            if self.to_gray and not self.to_binary:
+                self._cached_image = cv2.cvtColor(self._cached_image, cv2.COLOR_BGR2GRAY)
+            elif self.to_binary:
+                self._cached_image = cv2.cvtColor(self._cached_image, cv2.COLOR_BGR2GRAY)
+                _, self._cached_image = cv2.threshold(self._cached_image,
+                                                      127,
+                                                      255,
+                                                      cv2.THRESH_BINARY)
+
+        return self._cached_image
+
+
 class PreloadImages:
     """Preloaded image assets grouped by color space."""
 
     class COLOR:
-        LION = cv2.imread(str(ASSETS_DIR / "color/lion.jpg"))
-        LENA = cv2.imread(str(ASSETS_DIR / "color/lena.png"))
+        """Color space preloading options."""
+        LION = _LazyImage("color/lion.jpg")
+        LENA = _LazyImage("color/lena.png")
 
     class GRAY:
-        LION = cv2.imread(str(ASSETS_DIR / "color/lion.jpg"), cv2.IMREAD_GRAYSCALE)
-        LENA = cv2.imread(str(ASSETS_DIR / "color/lena.png"), cv2.IMREAD_GRAYSCALE)
+        """Gray space preloading options."""
+        LION = _LazyImage("color/lion.jpg", to_gray=True)
+        LENA = _LazyImage("color/lena.png", to_gray=True)
 
     class BINARY:
-        _, CAT_01 = cv2.threshold(cv2.imread(str(ASSETS_DIR / "binary/cat-01.jpg"), cv2.IMREAD_GRAYSCALE), 127, 255, cv2.THRESH_BINARY)
-        _, CAT_02 = cv2.threshold(cv2.imread(str(ASSETS_DIR / "binary/cat-02.jpg"), cv2.IMREAD_GRAYSCALE), 127, 255, cv2.THRESH_BINARY)
-        _, CAT_03 = cv2.threshold(cv2.imread(str(ASSETS_DIR / "binary/cat-03.jpg"), cv2.IMREAD_GRAYSCALE), 127, 255, cv2.THRESH_BINARY)
-        _, ANT = cv2.threshold(cv2.imread(str(ASSETS_DIR / "binary/ant.jpg"), cv2.IMREAD_GRAYSCALE), 127, 255, cv2.THRESH_BINARY)
-        _, PERSON = cv2.threshold(cv2.imread(str(ASSETS_DIR / "binary/person-01.jpg"), cv2.IMREAD_GRAYSCALE), 127, 255, cv2.THRESH_BINARY)
-        _, BAT = cv2.threshold(cv2.imread(str(ASSETS_DIR / "binary/bat.jpg"), cv2.IMREAD_GRAYSCALE), 127, 255, cv2.THRESH_BINARY)
+        """Binary space preloading options."""
+        CAT_01 = _LazyImage("binary/cat-01.jpg", to_binary=True)
+        CAT_02 = _LazyImage("binary/cat-02.jpg", to_binary=True)
+        CAT_03 = _LazyImage("binary/cat-03.jpg", to_binary=True)
+        ANT = _LazyImage("binary/ant.jpg", to_binary=True)
+        PERSON = _LazyImage("binary/person-01.jpg", to_binary=True)
+        BAT = _LazyImage("binary/bat.jpg", to_binary=True)
+
 
 class FitOption(Enum):
     """Image resizing strategy options."""
