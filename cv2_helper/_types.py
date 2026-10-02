@@ -10,14 +10,53 @@ import cv2
 ASSETS_DIR = Path(__file__).parent / "assets"
 
 
+class _LazyImage:
+    """Lazy image, just load images the 1st time they are accessed."""
+
+    def __init__(self, relative_path: str, to_gray: bool = False, to_binary: bool = False):
+        # constructor
+        self.path = ASSETS_DIR / relative_path
+        self.to_gray = to_gray
+        self.to_binary = to_binary
+        self._cached_image = None
+
+    def __get__(self, instance, owner):
+        # accessor
+        if self._cached_image is None:
+            self._cached_image = cv2.imread(str(self.path))
+            if self.to_gray and not self.to_binary:
+                self._cached_image = cv2.cvtColor(self._cached_image, cv2.COLOR_BGR2GRAY)
+            elif self.to_binary:
+                self._cached_image = cv2.cvtColor(self._cached_image, cv2.COLOR_BGR2GRAY)
+                _, self._cached_image = cv2.threshold(self._cached_image,
+                                                      127,
+                                                      255,
+                                                      cv2.THRESH_BINARY)
+
+        return self._cached_image
+
+
 class PreloadImages:
-    """Preload images using OpenCV preload images API."""
-    # COLOR ============================================
-    LION = cv2.imread(str(ASSETS_DIR / "lion.jpg"))
-    LENA = cv2.imread(str(ASSETS_DIR / "lena.png"))
-    # GRAY  ============================================
-    LION_GRAY = cv2.cvtColor(LION, cv2.COLOR_BGR2GRAY)
-    LENA_GRAY = cv2.cvtColor(LENA, cv2.COLOR_BGR2GRAY)
+    """Preloaded image assets grouped by color space."""
+
+    class COLOR:
+        """Color space preloading options."""
+        LION = _LazyImage("color/lion.jpg")
+        LENA = _LazyImage("color/lena.png")
+
+    class GRAY:
+        """Gray space preloading options."""
+        LION = _LazyImage("color/lion.jpg", to_gray=True)
+        LENA = _LazyImage("color/lena.png", to_gray=True)
+
+    class BINARY:
+        """Binary space preloading options."""
+        CAT_01 = _LazyImage("binary/cat-01.jpg", to_binary=True)
+        CAT_02 = _LazyImage("binary/cat-02.jpg", to_binary=True)
+        CAT_03 = _LazyImage("binary/cat-03.jpg", to_binary=True)
+        ANT = _LazyImage("binary/ant.jpg", to_binary=True)
+        PERSON = _LazyImage("binary/person-01.jpg", to_binary=True)
+        BAT = _LazyImage("binary/bat.jpg", to_binary=True)
 
 
 class FitOption(Enum):
