@@ -1,13 +1,9 @@
 import cv2
-
+import numpy as np
 from cv2_helper import imshow, TextPos, TextAttr, KeyCode, PreloadImages
 
 if __name__ == '__main__':
-    import cv2
-    import numpy as np
-    from cv2_helper import imshow
-
-    I = PreloadImages.LENA_GRAY
+    I = PreloadImages.GRAY.LENA
     K1 = np.array([
         [1, -1]
     ])

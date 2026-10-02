@@ -1,4 +1,5 @@
 """Type definitions and enumerations for cv2_helper."""
+import os.path
 # pylint: disable=no-member,too-many-instance-attributes,too-many-arguments,too-many-positional-arguments,too-few-public-methods,invalid-name
 
 from enum import Enum
@@ -11,14 +12,23 @@ ASSETS_DIR = Path(__file__).parent / "assets"
 
 
 class PreloadImages:
-    """Preload images using OpenCV preload images API."""
-    # COLOR ============================================
-    LION = cv2.imread(str(ASSETS_DIR / "lion.jpg"))
-    LENA = cv2.imread(str(ASSETS_DIR / "lena.png"))
-    # GRAY  ============================================
-    LION_GRAY = cv2.cvtColor(LION, cv2.COLOR_BGR2GRAY)
-    LENA_GRAY = cv2.cvtColor(LENA, cv2.COLOR_BGR2GRAY)
+    """Preloaded image assets grouped by color space."""
 
+    class COLOR:
+        LION = cv2.imread(str(ASSETS_DIR / "color/lion.jpg"))
+        LENA = cv2.imread(str(ASSETS_DIR / "color/lena.png"))
+
+    class GRAY:
+        LION = cv2.imread(str(ASSETS_DIR / "color/lion.jpg"), cv2.IMREAD_GRAYSCALE)
+        LENA = cv2.imread(str(ASSETS_DIR / "color/lena.png"), cv2.IMREAD_GRAYSCALE)
+
+    class BINARY:
+        _, CAT_01 = cv2.threshold(cv2.imread(str(ASSETS_DIR / "binary/cat-01.jpg"), cv2.IMREAD_GRAYSCALE), 127, 255, cv2.THRESH_BINARY)
+        _, CAT_02 = cv2.threshold(cv2.imread(str(ASSETS_DIR / "binary/cat-02.jpg"), cv2.IMREAD_GRAYSCALE), 127, 255, cv2.THRESH_BINARY)
+        _, CAT_03 = cv2.threshold(cv2.imread(str(ASSETS_DIR / "binary/cat-03.jpg"), cv2.IMREAD_GRAYSCALE), 127, 255, cv2.THRESH_BINARY)
+        _, ANT = cv2.threshold(cv2.imread(str(ASSETS_DIR / "binary/ant.jpg"), cv2.IMREAD_GRAYSCALE), 127, 255, cv2.THRESH_BINARY)
+        _, PERSON = cv2.threshold(cv2.imread(str(ASSETS_DIR / "binary/person-01.jpg"), cv2.IMREAD_GRAYSCALE), 127, 255, cv2.THRESH_BINARY)
+        _, BAT = cv2.threshold(cv2.imread(str(ASSETS_DIR / "binary/bat.jpg"), cv2.IMREAD_GRAYSCALE), 127, 255, cv2.THRESH_BINARY)
 
 class FitOption(Enum):
     """Image resizing strategy options."""
