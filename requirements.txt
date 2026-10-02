@@ -2,3 +2,5 @@ opencv-python==5.0.0.93
 python-semantic-release==10.7.0
 pylint==4.1.1
 numpy==2.5.3
+
+pdoc==16.0.0
