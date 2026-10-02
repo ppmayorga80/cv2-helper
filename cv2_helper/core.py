@@ -247,16 +247,18 @@ def imshow(
         an integer with the key identifier or -1
 
     Examples:
-        >>> import cv2
-        >>> from cv2_helper import imshow, TextAttr, TextPos
-        >>> A=cv2.imread("lion.jpg")
-        >>> B=cv2.imread("cat.jpg")
-        >>> imshow("CATS",[A,B])
-        >>> imshow("CATS",[(A,"Lion"),B])
-        >>> imshow("CATS",[(A,"Lion"),(B,"Cat")])
-        >>> imshow("CATS",[(A,"Lion"),(B,"Cat",TextAttr(org=TextPos.TOP_CENTER))])
-        >>> imshow("CATS",(A,B),border=1)
-        >>> imshow("CATS",(A,B),border=1, border_color=(0,255,255))
+        ```python
+        import cv2
+        from cv2_helper import imshow, TextAttr, TextPos
+        A = cv2.imread("lion.jpg")
+        B = cv2.imread("cat.jpg")
+        imshow("CATS",[A,B])
+        imshow("CATS",[(A,"Lion"),B])
+        imshow("CATS",[(A,"Lion"),(B,"Cat")])
+        imshow("CATS",[(A,"Lion"),(B,"Cat",TextAttr(org=TextPos.TOP_CENTER))])
+        imshow("CATS",(A,B),border=1)
+        imshow("CATS",(A,B),border=1, border_color=(0,255,255))
+        ```
     """
 
     # 1. transform img_or_list to a list of tuples (ndarray,str,TextAttr).
