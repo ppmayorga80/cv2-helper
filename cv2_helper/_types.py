@@ -43,21 +43,24 @@ class PreloadImages:
         """Color space preloading options."""
         LION = _LazyImage("color/lion.jpg")
         LENA = _LazyImage("color/lena.png")
+        CAT_01 = _LazyImage("binary/cat-01.jpg")
+        CAT_02 = _LazyImage("binary/cat-02.jpg")
+        CAT_03 = _LazyImage("binary/cat-03.jpg")
 
     class GRAY:
         """Gray space preloading options."""
         LION = _LazyImage("color/lion.jpg", to_gray=True)
         LENA = _LazyImage("color/lena.png", to_gray=True)
+        CAT_01 = _LazyImage("binary/cat-01.jpg", to_gray=True)
+        CAT_02 = _LazyImage("binary/cat-02.jpg", to_gray=True)
+        CAT_03 = _LazyImage("binary/cat-03.jpg", to_gray=True)
 
     class BINARY:
         """Binary space preloading options."""
-        CAT_01 = _LazyImage("binary/cat-01.jpg", to_binary=True)
-        CAT_02 = _LazyImage("binary/cat-02.jpg", to_binary=True)
-        CAT_03 = _LazyImage("binary/cat-03.jpg", to_binary=True)
         ANT = _LazyImage("binary/ant.jpg", to_binary=True)
-        PERSON = _LazyImage("binary/person-01.jpg", to_binary=True)
         BAT = _LazyImage("binary/bat.jpg", to_binary=True)
         HORSE = _LazyImage("binary/horse.png", to_binary=True)
+        PERSON = _LazyImage("binary/person.jpg", to_binary=True)
 
 
 class FitOption(Enum):
