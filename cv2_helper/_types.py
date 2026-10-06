@@ -57,6 +57,7 @@ class PreloadImages:
         ANT = _LazyImage("binary/ant.jpg", to_binary=True)
         PERSON = _LazyImage("binary/person-01.jpg", to_binary=True)
         BAT = _LazyImage("binary/bat.jpg", to_binary=True)
+        HORSE = _LazyImage("binary/horse.png", to_binary=True)
 
 
 class FitOption(Enum):

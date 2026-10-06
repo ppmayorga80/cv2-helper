@@ -21,6 +21,5 @@ lint:
 
 # all commands in a row
 all:
-	$(MAKE) docs
 	$(MAKE) lint
 	$(MAKE) docs MODE=html
