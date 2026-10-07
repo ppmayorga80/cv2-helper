@@ -170,7 +170,7 @@ def imshow(
         wait_time: int | None = 0,
         exit_key_codes: Sequence[KeyCode] | KeyCode = KeyCode.ALL,
         **kwargs
-) -> int:
+) -> tuple[int, np.ndarray]:
     """The method shows images with labels in a quasi-grid filling spaces with black images
 
     Args:
@@ -181,7 +181,7 @@ def imshow(
         kwargs: includes keys as border:int and border_color:int|tuple[int,int,int]
 
     Returns:
-        an integer with the key identifier or -1
+        A tuple containing the key identifier (or -1) and the full grid image.
 
     Examples:
         ```python
@@ -194,7 +194,7 @@ def imshow(
         imshow("CATS",[(A,"Lion"),(B,"Cat")])
         imshow("CATS",[(A,"Lion"),(B,"Cat",TextAttr(org=TextPos.TOP_CENTER))])
         imshow("CATS",(A,B),border=1)
-        imshow("CATS",(A,B),border=1, border_color=(0,255,255))
+        key,im_grid = imshow("CATS",(A,B),border=1, border_color=(0,255,255))
         ```
     """
 
@@ -233,7 +233,7 @@ def imshow(
     full_grid_image = np.vstack([np.hstack(row) for row in grid])
     cv2.imshow(title, full_grid_image)
 
-    return wait_key(wait_time, exit_key_codes)
+    return wait_key(wait_time, exit_key_codes), full_grid_image
 
 
 def wait_key(
