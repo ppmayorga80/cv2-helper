@@ -2,12 +2,14 @@
 # pylint: disable=no-member
 
 from math import sqrt
-import secrets
 from typing import Tuple
 
+import secrets
+
+import numpy as np
 import cv2
 
-from ._types import TextAttr, TextPos
+from ._types import TextAttr, TextPos, ImgOrListType
 
 
 def _get_quasi_square(n: int) -> Tuple[int, int]:
@@ -95,3 +97,42 @@ def _get_text_info(
             ta.org = (xl, yt)
 
     return ta.org, ta.fontFace, ta.fontScale, ta.color, ta.thickness, ta.lineType
+
+
+def _normalize_img_or_list_type(img_or_list: ImgOrListType) -> ImgOrListType:
+    """Given a single image or list of: images | (image, str) | (image, str, TextAttr)
+    this function normalizes it to a list[(image,str,TextAttr] s.t. if no text or
+    attributes are given, an empty values are used
+
+    Args:
+        img_or_list: Image or list [image|(image,str)|(image,str,TextAttr)]
+
+    Returns:
+        The normalized list of image sequences where each element
+        has length 3 (image, str, TextAttr).
+
+    ---
+    Examples:
+        ```python
+            A=cv2.imread("./test.jpg")
+            X=_normalize_img_or_list_type(A)
+            Y=_normalize_img_or_list_type([(A,"HELLO")])
+            Z=_normalize_img_or_list_type([(A,"HELLO"),(A,"WORLD"), A])
+            # X = [[A,"",TextAttr()]]
+            # Y = [[A,"HELLO",TextAttr()]]
+            # Z = [[A,"HELLO",TextAttr()],[A,"WORLD",TextAttr()], [A,"",TextAttr()]]
+        ```
+    """
+    # 1. transform img_or_list to a list of tuples (ndarray,str,TextAttr).
+    img_or_list = [img_or_list] if isinstance(img_or_list, np.ndarray) else img_or_list
+    img_or_list = [
+        [x, "", TextAttr()] if isinstance(x, np.ndarray) else (
+            [x[0], "", TextAttr()] if isinstance(x, (list, tuple)) and len(x) == 1 else (
+                [x[0], x[1], TextAttr()] if isinstance(x, (list, tuple)) and len(x) == 2 else (
+                    [x[0], x[1], x[2]]
+                )
+            )
+        )
+        for x in img_or_list
+    ]
+    return img_or_list
