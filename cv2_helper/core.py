@@ -6,8 +6,8 @@ from typing import Sequence, Any
 import cv2
 import numpy as np
 
-from ._types import FitOption, TextAttr, KeyCode
-from ._utils import _get_quasi_square, _get_text_info
+from ._types import FitOption, KeyCode, ImgOrListType
+from ._utils import _get_quasi_square, _get_text_info, _normalize_img_or_list_type
 
 
 def resize(
@@ -128,7 +128,7 @@ def add_borders(
 
 
 def add_text(
-        imgs: tuple[np.ndarray, str] | tuple[np.ndarray, str, TextAttr] | list[tuple]
+        imgs: ImgOrListType
 ) -> list[np.ndarray]:
     """Draw text labels onto images based on specified positional and styling attributes.
 
@@ -138,33 +138,7 @@ def add_text(
     Returns:
         List of labeled NumPy array images.
     """
-    if isinstance(imgs, tuple):
-        if len(imgs) == 1:
-            img_list = [(imgs[0], "", TextAttr())]
-        elif len(imgs) == 2:
-            img_list = [(imgs[0], imgs[1], TextAttr())]
-        elif len(imgs) == 3:
-            img_list = [imgs]
-        else:
-            raise ValueError(f"Invalid tuple parameters count: {len(imgs)}")
-    elif isinstance(imgs, list):
-        img_list = [
-            (x, "", TextAttr())
-            if isinstance(x, np.ndarray)
-            else (
-                (x[0], "", TextAttr())
-                if isinstance(x, (list, tuple)) and len(x) == 1
-                else (
-                    (x[0], x[1], TextAttr())
-                    if isinstance(x, (list, tuple)) and len(x) == 2
-                    else (x[0], x[1], x[2])
-                )
-            )
-            for x in imgs
-        ]
-    else:
-        raise ValueError("Invalid parameters structure provided for labels.")
-
+    img_list = _normalize_img_or_list_type(imgs)
     shape = img_list[0][0].shape
     images = []
     for mat, lbl, opts in img_list:
@@ -190,46 +164,9 @@ def add_text(
     return images
 
 
-def _imshow(
-        title: str,
-        img: np.ndarray | Sequence[np.ndarray],
-        wait_time: int | None = 0,
-        exit_key_codes: Sequence[KeyCode] | KeyCode = KeyCode.ALL
-) -> int:
-    """Display an image or a sequence of images formatted as a grid in an OpenCV window.
-
-    Args:
-        title: Window title string.
-        img: Single image array or sequence of image arrays.
-        wait_time: Delay in milliseconds for cv2.waitKey (0 waits indefinitely).
-        exit_key_codes: Single or list of exit key codes.
-    Returns:
-        int: the key identifier or -1
-    """
-    if isinstance(img, np.ndarray):
-        cv2.imshow(title, img)
-        if wait_time is not None:
-            return wait_key(wait_time, exit_key_codes)
-
-    if isinstance(img, (list, tuple)):
-        img_list = list(img)
-        rows, cols = _get_quasi_square(len(img_list))
-
-        img_list += [np.zeros_like(img_list[-1]) for _ in range(rows * cols - len(img_list))]
-
-        grid = [img_list[i * cols: (i + 1) * cols] for i in range(rows)]
-        full_grid_image = np.vstack([np.hstack(row) for row in grid])
-
-        cv2.imshow(title, full_grid_image)
-        if wait_time is not None:
-            return wait_key(wait_time, exit_key_codes)
-
-    return -1
-
-
 def imshow(
         title: str,
-        img_or_list: np.ndarray | Sequence[np.ndarray | tuple[np.ndarray, str] | tuple[np.ndarray, str, TextAttr]],
+        img_or_list: ImgOrListType,
         wait_time: int | None = 0,
         exit_key_codes: Sequence[KeyCode] | KeyCode = KeyCode.ALL,
         **kwargs
@@ -262,20 +199,7 @@ def imshow(
     """
 
     # 1. transform img_or_list to a list of tuples (ndarray,str,TextAttr).
-    img_or_list = [img_or_list] if isinstance(img_or_list, np.ndarray) else img_or_list
-    img_or_list = [
-        [x, "", TextAttr()] if isinstance(x, np.ndarray) else (
-            [x[0], "", TextAttr()] if isinstance(x, (list, tuple)) and len(x) == 1 else (
-                [x[0], x[1], TextAttr()] if isinstance(x, (list, tuple)) and len(x) == 2 else (
-                    [x[0], x[1], x[2]]
-                )
-            )
-        )
-        for x in img_or_list
-    ]
-    assert all(isinstance(x[0], np.ndarray) for x in img_or_list)
-    assert all(isinstance(x[1], str) for x in img_or_list)
-    assert all(isinstance(x[2], TextAttr) for x in img_or_list)
+    img_or_list = _normalize_img_or_list_type(img_or_list)
 
     # 2. ensure all images are of the same size
     first_shape = img_or_list[0][0].shape[0:2]
@@ -283,7 +207,7 @@ def imshow(
         imgs = [x[0] for x in img_or_list]
         imgs = resize(imgs, imgs[0], fx=1.0, fy=1.0, fill_color=(255, 255, 0))
         img_or_list = [
-            (img, x[1], x[2])
+            [img, x[1], x[2]]
             for img, x in zip(imgs, img_or_list)
         ]
 

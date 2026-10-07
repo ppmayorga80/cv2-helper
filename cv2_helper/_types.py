@@ -2,9 +2,10 @@
 # pylint: disable=no-member,too-many-instance-attributes,too-many-arguments,too-many-positional-arguments,too-few-public-methods,invalid-name
 
 from enum import Enum
-from typing import Any
+from typing import Any, Sequence, TypeAlias
 from pathlib import Path
 import cv2
+import numpy as np
 
 # Get assets path
 ASSETS_DIR = Path(__file__).parent / "assets"
@@ -120,6 +121,21 @@ class TextAttr:
         self.margin = TextAttr.margin if margin is None else margin
         self.margin_x = self.margin if margin_x is None else margin_x
         self.margin_y = self.margin if margin_y is None else margin_y
+
+
+# A single image specifier:
+# - np.ndarray
+# - 2-element tuple/list: (img, "title") or [img, "title"]
+# - 3-element tuple/list: (img, "title", attr) or [img, "title", attr]
+# Declare explicit TypeAlias annotations
+ImgSpec: TypeAlias = (
+        np.ndarray
+        | tuple[np.ndarray, str]
+        | tuple[np.ndarray, str, TextAttr]
+        | list[np.ndarray | str]
+        | list[np.ndarray | str | TextAttr]
+)
+ImgOrListType: TypeAlias = ImgSpec | Sequence[ImgSpec]
 
 
 class KeyCode:
