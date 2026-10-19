@@ -44,17 +44,17 @@ class PreloadImages:
         """Color space preloading options."""
         LION = _LazyImage("color/lion.png")
         LENA = _LazyImage("color/lena.png")
-        CAT_01 = _LazyImage("binary/cat-01.png")
-        CAT_02 = _LazyImage("binary/cat-02.png")
-        CAT_03 = _LazyImage("binary/cat-03.png")
+        CAT_01 = _LazyImage("color/cat-01.png")
+        CAT_02 = _LazyImage("color/cat-02.png")
+        CAT_03 = _LazyImage("color/cat-03.png")
 
     class GRAY:
         """Gray space preloading options."""
         LION = _LazyImage("color/lion.png", to_gray=True)
         LENA = _LazyImage("color/lena.png", to_gray=True)
-        CAT_01 = _LazyImage("binary/cat-01.png", to_gray=True)
-        CAT_02 = _LazyImage("binary/cat-02.png", to_gray=True)
-        CAT_03 = _LazyImage("binary/cat-03.png", to_gray=True)
+        CAT_01 = _LazyImage("color/cat-01.png", to_gray=True)
+        CAT_02 = _LazyImage("color/cat-02.png", to_gray=True)
+        CAT_03 = _LazyImage("color/cat-03.png", to_gray=True)
 
     class BINARY:
         """Binary space preloading options."""
