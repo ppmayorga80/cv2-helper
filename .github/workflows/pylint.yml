@@ -24,9 +24,9 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install pylint numpy opencv-python
+          pip install -e ".[dev]"
 
       - name: Execute Pylint validation
         run: |
           # Enforce strict 10.0 score threshold to allow PR merge
-          pylint --fail-under=10.0 cv2_helper
+          pylint --fail-under=10.0 src/cv2_helper

@@ -6,12 +6,12 @@ from typing import Sequence, Any
 import cv2
 import numpy as np
 
-from ._types import FitOption, KeyCode, ImgOrListType
-from ._utils import _get_quasi_square, _get_text_info, _normalize_img_or_list_type
+from ._types import FitOption, KeyCode, ImgSpecListType, ImgSpecClass, PreloadImages
+from ._utils import _get_quasi_square, _get_text_info
 
 
 def resize(
-        imgs: Sequence[np.ndarray],
+        imgs: np.ndarray | Sequence[np.ndarray],
         dsize: tuple[int, int] | np.ndarray | None = None,
         fx: float = 0.0,
         fy: float = 0.0,
@@ -128,7 +128,7 @@ def add_borders(
 
 
 def add_text(
-        imgs: ImgOrListType
+        imgs: ImgSpecListType
 ) -> list[np.ndarray]:
     """Draw text labels onto images based on specified positional and styling attributes.
 
@@ -138,17 +138,19 @@ def add_text(
     Returns:
         List of labeled NumPy array images.
     """
-    img_list = _normalize_img_or_list_type(imgs)
-    shape = img_list[0][0].shape
+    img_list = ImgSpecClass.normalize_to_list(imgs)
+    shape = img_list[0].img.shape
     images = []
-    for mat, lbl, opts in img_list:
+    for img_spec in img_list:
+        img, lbl, opts = img_spec.img, img_spec.label, img_spec.ta
+
         if lbl:
-            mat = mat.copy()
+            img = img.copy()
             info_org, info_font_face, info_font_scale, info_color, thickness, line_type = (
                 _get_text_info(shape, lbl, opts)
             )
             cv2.putText(
-                mat,
+                img,
                 lbl,
                 info_org,
                 info_font_face,
@@ -157,31 +159,31 @@ def add_text(
                 thickness=thickness,
                 lineType=line_type,
             )
-            images.append(mat)
+            images.append(img)
         else:
-            images.append(mat)
+            images.append(img)
 
     return images
 
 
-def imshow(
-        title: str,
-        img_or_list: ImgOrListType,
-        wait_time: int | None = 0,
-        exit_key_codes: Sequence[KeyCode] | KeyCode = KeyCode.ALL,
-        **kwargs
-) -> tuple[int, np.ndarray]:
+def imcomp(
+        img_or_list: ImgSpecListType,
+        shape: tuple[int, int] | None = None,
+        border: int = 0,
+        border_color: int | tuple[int, int, int] = (255, 255, 255),
+        fill_bg_color: int | tuple[int, int, int] = (255, 255, 0)
+) -> np.ndarray:
     """The method shows images with labels in a quasi-grid filling spaces with black images
 
     Args:
-        title: Window title string.
         img_or_list: Single image array or sequence of image arrays.
-        wait_time: if provided, the time in ms to show image window unless we press a key
-        exit_key_codes: Single or list of exit key codes, default is any key
-        kwargs: includes keys as border:int and border_color:int|tuple[int,int,int]
+        shape: the shape of the image to composite, if None, infer the optimal shape
+        border: the border size to be drawn
+        border_color: the border color
+        fill_bg_color: the fill color used when scaling images and fill non defined region or for missing image tile
 
     Returns:
-        A tuple containing the key identifier (or -1) and the full grid image.
+        A single image with all images arranged with shape and border information
 
     Examples:
         ```python
@@ -189,51 +191,69 @@ def imshow(
         from cv2_helper import imshow, TextAttr, TextPos
         A = cv2.imread("lion.jpg")
         B = cv2.imread("cat.jpg")
-        imshow("CATS",[A,B])
-        imshow("CATS",[(A,"Lion"),B])
-        imshow("CATS",[(A,"Lion"),(B,"Cat")])
-        imshow("CATS",[(A,"Lion"),(B,"Cat",TextAttr(org=TextPos.TOP_CENTER))])
-        imshow("CATS",(A,B),border=1)
-        key,im_grid = imshow("CATS",(A,B),border=1, border_color=(0,255,255))
+        imshow("CATS",imcomp([A,B]))
+        imshow("CATS",imcomp([(A,"Lion"),B]))
+        imshow("CATS",imcomp([(A,"Lion"),(B,"Cat")]))
+        imshow("CATS",imcomp([(A,"Lion"),(B,"Cat",TextAttr(org=TextPos.TOP_CENTER))]))
+        imshow("CATS",imcomp((A,B),border=1))
+        key,im_grid = imshow("CATS",imcomp((A,B)), shape=(2,2),border=1, border_color=(0,255,255))
         ```
     """
 
     # 1. transform img_or_list to a list of tuples (ndarray,str,TextAttr).
-    img_or_list = _normalize_img_or_list_type(img_or_list)
+    img_norm_list = ImgSpecClass.normalize_to_list(img_or_list)
+    img_list: list = [[x.img, x.label, x.ta] for x in img_norm_list]
 
-    # 2. ensure all images are of the same size
-    first_shape = img_or_list[0][0].shape[0:2]
-    if not all(x[0].shape[0:2] == first_shape for x in img_or_list):
-        imgs = [x[0] for x in img_or_list]
-        imgs = resize(imgs, imgs[0], fx=1.0, fy=1.0, fill_color=(255, 255, 0))
-        img_or_list = [
-            [img, x[1], x[2]]
-            for img, x in zip(imgs, img_or_list)
-        ]
+    rows, cols = shape[:2] if shape is not None else _get_quasi_square(len(img_list))
 
     # 2.1 ensure all images are BGR
-    for k, _ in enumerate(img_or_list):
-        img = img_or_list[k][0]
-        if img.ndim == 2:
-            img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
-            img_or_list[k][0] = img
+    for item in img_list:
+        if item[0].ndim == 2:
+            item[0] = cv2.cvtColor(item[0], cv2.COLOR_GRAY2BGR)
+    # for k in range(len(img_list)):
+    #     img = img_list[k][0]
+    #     if img.ndim == 2:
+    #         img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
+    #         img_list[k][0] = img
+
+    # 2.2 ensure all images are of the same size
+    first_shape = img_list[0][0].shape[0:2]
+    if not all(img.shape[0:2] == first_shape for img, _, _ in img_list):
+        imgs = [img for img, _, _ in img_list]
+        imgs = resize(imgs, imgs[0], fx=1.0, fy=1.0, fill_color=fill_bg_color)
+        img_list = [
+            [img, label, ta]
+            for img, (_, label, ta) in zip(imgs, img_list)
+        ]
 
     # 3. add labels
-    imgs_with_labels = add_text(img_or_list)
+    imgs_with_labels = add_text(img_list)
 
-    # 4. ensure we have borders
-    if "border" in kwargs:
-        border = int(kwargs["border"])
-        border_color = kwargs.get("border_color", (255, 255, 255))
+    # 4. add empty cells
+    im0 = imgs_with_labels[0]
+    bg_region = np.full(im0.shape, fill_value=fill_bg_color, dtype=im0.dtype)
+    imgs_with_labels += [bg_region for _ in range(rows * cols - len(imgs_with_labels))]
+
+    # 5. ensure we have borders
+    if border > 0:
+        border = int(border)
+        if isinstance(border_color, int):
+            border_color = (border_color, border_color, border_color)
+        elif isinstance(border_color, (tuple, list)):
+            if len(border_color) == 1:
+                border_color = (border_color[0], border_color[0], border_color[0])
+            elif len(border_color) == 3:
+                border_color = tuple(border_color)
+            else:
+                raise ValueError("border_color should be a tuple|list of size 3 or a single integer")
+
         imgs_with_labels = add_borders(imgs_with_labels, border=border, border_color=border_color)
 
-    rows, cols = _get_quasi_square(len(imgs_with_labels))
-    imgs_with_labels += [np.zeros_like(imgs_with_labels[-1]) for _ in range(rows * cols - len(imgs_with_labels))]
+    # 6. convert all images to one grid image
     grid = [imgs_with_labels[i * cols: (i + 1) * cols] for i in range(rows)]
     full_grid_image = np.vstack([np.hstack(row) for row in grid])
-    cv2.imshow(title, full_grid_image)
 
-    return wait_key(wait_time, exit_key_codes), full_grid_image
+    return full_grid_image
 
 
 def wait_key(
@@ -271,3 +291,16 @@ def wait_key(
                     break
 
     return result_key
+
+
+if __name__ == '__main__':
+    A = PreloadImages.COLOR.CAT_01
+    B = PreloadImages.COLOR.CAT_02
+    C = PreloadImages.COLOR.CAT_03
+    D = PreloadImages.GRAY.LENA
+    E = PreloadImages.BINARY.HORSE
+
+    G0 = imcomp([A, B, C, D, E], border=1, border_color=(255, 255, 0), fill_bg_color=(127, 127, 127))
+
+    cv2.imshow("G0", G0)
+    cv2.waitKey(0)

@@ -1,6 +1,6 @@
 # default parameters
 MODE ?= http
-TARGET ?= ./cv2_helper
+TARGET ?= ./src/cv2_helper
 
 .PHONY: docs lint test all
 
@@ -16,7 +16,7 @@ docs:
 
 # Linter
 lint:
-	pylint --fail-under=10.0 cv2_helper
+	pylint --fail-under=10.0 src/cv2_helper
 
 
 # all commands in a row
