@@ -11,30 +11,71 @@ import numpy as np
 ASSETS_DIR = Path(__file__).parent / "assets"
 
 
-class _LazyImage:
+class FitOption(Enum):
+    """Image resizing strategy options."""
+
+    FIT_FULL = 0  # Fill entire canvas, stretching image if necessary
+    FIT_AUTO = 1  # Automatically adjust scale to preserve aspect ratio and pad empty space
+
+
+class Image2DType(Enum):
+    """Image assets type."""
+    AUTO = 0
+    COLOR = 1
+    GRAY = 2
+    BINARY = 3
+
+
+class _LazyImage2D:
     """Lazy image, just load images the 1st time they are accessed."""
 
-    def __init__(self, relative_path: str, to_gray: bool = False, to_binary: bool = False):
+    def __init__(self, asset_rel_path: str, convert_to: Image2DType = Image2DType.AUTO):
         # constructor
-        self.path = ASSETS_DIR / relative_path
-        self.to_gray = to_gray
-        self.to_binary = to_binary
-        self._cached_image = None
+        self.path = ASSETS_DIR / asset_rel_path
+        self.image_type = Image2DType.AUTO
+        self.convert_to = convert_to
+        self.cached_image = None
 
     def __get__(self, instance, owner):
         # accessor
-        if self._cached_image is None:
-            self._cached_image = cv2.imread(str(self.path))
-            if self.to_gray and not self.to_binary:
-                self._cached_image = cv2.cvtColor(self._cached_image, cv2.COLOR_BGR2GRAY)
-            elif self.to_binary:
-                self._cached_image = cv2.cvtColor(self._cached_image, cv2.COLOR_BGR2GRAY)
-                _, self._cached_image = cv2.threshold(self._cached_image,
-                                                      127,
-                                                      255,
-                                                      cv2.THRESH_BINARY)
+        if self.cached_image is None:
+            self.cached_image = cv2.imread(str(self.path))
+            ndim = len(self.cached_image.shape)
 
-        return self._cached_image
+            if ndim == 2:
+                self.image_type = Image2DType.GRAY
+            elif ndim == 3:
+                self.image_type = Image2DType.COLOR
+            else:
+                raise ValueError(f"Unsupported image dimension: {ndim} from shape={self.cached_image.shape}")
+
+            if self.convert_to == Image2DType.AUTO:
+                pass
+
+            if self.convert_to == Image2DType.COLOR:
+                if self.image_type == Image2DType.COLOR:
+                    pass
+                if self.image_type == Image2DType.GRAY:
+                    self.cached_image = cv2.cvtColor(self.cached_image, cv2.COLOR_GRAY2BGR)
+            elif self.convert_to == Image2DType.GRAY:
+                if self.image_type == Image2DType.COLOR:
+                    self.cached_image = cv2.cvtColor(self.cached_image, cv2.COLOR_BGR2GRAY)
+                elif self.image_type == Image2DType.GRAY:
+                    pass
+            elif self.convert_to == Image2DType.BINARY:
+                if self.image_type == Image2DType.COLOR:
+                    self.cached_image = cv2.cvtColor(self.cached_image, cv2.COLOR_BGR2GRAY)
+                    _, self.cached_image = cv2.threshold(self.cached_image,
+                                                         127,
+                                                         255,
+                                                         cv2.THRESH_BINARY)
+                elif self.image_type.value == Image2DType.GRAY:
+                    _, self.cached_image = cv2.threshold(self.cached_image,
+                                                         127,
+                                                         255,
+                                                         cv2.THRESH_BINARY)
+
+        return self.cached_image
 
 
 class PreloadImages:
@@ -42,33 +83,26 @@ class PreloadImages:
 
     class COLOR:
         """Color space preloading options."""
-        LION = _LazyImage("color/lion.png")
-        LENA = _LazyImage("color/lena.png")
-        CAT_01 = _LazyImage("color/cat-01.png")
-        CAT_02 = _LazyImage("color/cat-02.png")
-        CAT_03 = _LazyImage("color/cat-03.png")
+        LION = _LazyImage2D("color/lion.png")
+        LENA = _LazyImage2D("color/lena.png")
+        CAT_01 = _LazyImage2D("color/cat-01.png")
+        CAT_02 = _LazyImage2D("color/cat-02.png")
+        CAT_03 = _LazyImage2D("color/cat-03.png")
 
     class GRAY:
         """Gray space preloading options."""
-        LION = _LazyImage("color/lion.png", to_gray=True)
-        LENA = _LazyImage("color/lena.png", to_gray=True)
-        CAT_01 = _LazyImage("color/cat-01.png", to_gray=True)
-        CAT_02 = _LazyImage("color/cat-02.png", to_gray=True)
-        CAT_03 = _LazyImage("color/cat-03.png", to_gray=True)
+        LION = _LazyImage2D("color/lion.png", convert_to=Image2DType.GRAY)
+        LENA = _LazyImage2D("color/lena.png", convert_to=Image2DType.GRAY)
+        CAT_01 = _LazyImage2D("color/cat-01.png", convert_to=Image2DType.GRAY)
+        CAT_02 = _LazyImage2D("color/cat-02.png", convert_to=Image2DType.GRAY)
+        CAT_03 = _LazyImage2D("color/cat-03.png", convert_to=Image2DType.GRAY)
 
     class BINARY:
         """Binary space preloading options."""
-        ANT = _LazyImage("binary/ant.png", to_binary=True)
-        BAT = _LazyImage("binary/bat.png", to_binary=True)
-        HORSE = _LazyImage("binary/horse.png", to_binary=True)
-        PERSON = _LazyImage("binary/person.png", to_binary=True)
-
-
-class FitOption(Enum):
-    """Image resizing strategy options."""
-
-    FIT_FULL = 0  # Fill entire canvas, stretching image if necessary
-    FIT_AUTO = 1  # Automatically adjust scale to preserve aspect ratio and pad empty space
+        ANT = _LazyImage2D("binary/ant.png", convert_to=Image2DType.BINARY)
+        BAT = _LazyImage2D("binary/bat.png", convert_to=Image2DType.BINARY)
+        HORSE = _LazyImage2D("binary/horse.png", convert_to=Image2DType.BINARY)
+        PERSON = _LazyImage2D("binary/person.png", convert_to=Image2DType.BINARY)
 
 
 class TextPos(Enum):
@@ -97,6 +131,9 @@ class TextAttr:
     margin: int = 8
     margin_x: int = 0
     margin_y: int = 0
+
+    def __str__(self):
+        return f"TextAttr(org={self.org},fontFace={self.fontFace},fontScale={self.fontScale},color={self.color},thickness={self.thickness},lineType={self.lineType},margin={self.margin},margin_x={self.margin_x},margin_y={self.margin_y})"
 
     def __init__(
             self,
@@ -128,14 +165,87 @@ class TextAttr:
 # - 2-element tuple/list: (img, "title") or [img, "title"]
 # - 3-element tuple/list: (img, "title", attr) or [img, "title", attr]
 # Declare explicit TypeAlias annotations
-ImgSpec: TypeAlias = (
+ImgSpecType: TypeAlias = (
         np.ndarray
         | tuple[np.ndarray, str]
+        | tuple[np.ndarray, str, TextPos]
         | tuple[np.ndarray, str, TextAttr]
-        | list[np.ndarray | str]
-        | list[np.ndarray | str | TextAttr]
+        | list
 )
-ImgOrListType: TypeAlias = ImgSpec | Sequence[ImgSpec]
+ImgSpecListType: TypeAlias = ImgSpecType | list[ImgSpecType] | tuple[ImgSpecType]
+
+
+class ImgSpecClass:
+    img: np.ndarray = None
+    label: str = ""
+    ta: TextAttr = None
+
+    def __str__(self):
+        return f"np.ndarray[{self.img.shape}], '{self.label}', {self.ta}"
+
+    def __init__(self, img_w_spec: ImgSpecType):
+        if isinstance(img_w_spec, np.ndarray):
+            self.img = img_w_spec
+            self.label = ""
+            self.ta = TextAttr()
+        elif isinstance(img_w_spec, (tuple, list)):
+            if len(img_w_spec) == 1:
+                self.img = img_w_spec[0]
+                self.label = ""
+                self.ta = TextAttr()
+            elif len(img_w_spec) == 2:
+                self.img = img_w_spec[0]
+                self.label = img_w_spec[1]
+                self.ta = TextAttr()
+            elif len(img_w_spec) == 3:
+                self.img = img_w_spec[0]
+                self.label = img_w_spec[1]
+                if isinstance(img_w_spec[2], TextPos):
+                    self.ta = TextAttr(org=img_w_spec[2])
+                else:
+                    self.ta = img_w_spec[2]
+
+        if not all([
+            isinstance(self.img, np.ndarray),
+            isinstance(self.label, str),
+            isinstance(self.ta, TextAttr)]):
+            raise TypeError(f"img_w_spec must be of type {ImgSpecType}")
+
+    @classmethod
+    def normalize_to_list(cls, img_or_list: ImgSpecListType) -> list[ImgSpecClass]:
+        """Given an image or list specification
+        this function normalizes it to a list[(image,str,TextAttr)] s.t. if no text or
+        attributes are given, an empty/default values are used
+
+        Args:
+            img_or_list: Image or list [image|(image,str)|(image,str,TextAttr)]
+
+        Returns:
+            The normalized list of image sequences where each element
+            has length 3 (image, str, TextAttr).
+
+        ---
+        Examples:
+            ```python
+                A=cv2.imread('./test.jpg')
+                X=ImgSpec.normalize_to_list(A)
+                Y=ImgSpec.normalize_to_list([(A,"HELLO")])
+                Z=ImgSpec.normalize_to_list([(A,"HELLO"),(A,"WORLD"), A])
+                # X = [[A,"",TextAttr()]]
+                # Y = [[A,"HELLO",TextAttr()]]
+                # Z = [[A,"HELLO",TextAttr()],[A,"WORLD",TextAttr()], [A,"",TextAttr()]]
+            ```
+        """
+        if isinstance(img_or_list, np.ndarray):
+            return [cls(img_or_list)]
+        elif isinstance(img_or_list, (tuple, list)):
+            try:
+                object0 = cls(img_or_list)
+                return [object0]
+            except TypeError:
+                pass
+            return [cls(x) for x in img_or_list]
+        raise TypeError(f"image_or_list must be of type Sequence[{ImgSpecType}]")
 
 
 class KeyCode:
@@ -184,3 +294,26 @@ class KeyCode:
             has_all = cls.parse_key_codes(codes.value, valid_codes)
 
         return has_all
+
+
+if __name__ == '__main__':
+    A = PreloadImages.COLOR.CAT_01
+    print(ImgSpecClass(A))
+    print(ImgSpecClass((A, "Hello")))
+    print(ImgSpecClass((A, "Hello", TextPos.CENTER)))
+    print(ImgSpecClass((A, "Hello", TextAttr(color=(0, 255, 255)))))
+
+    print("[")
+    for x in ImgSpecClass.normalize_to_list(A):
+        print("\t", x, ",")
+    print("]")
+
+    print("[")
+    for x in ImgSpecClass.normalize_to_list([A, A]):
+        print("\t", x, ",")
+    print("]")
+
+    print("[")
+    for x in ImgSpecClass.normalize_to_list(((A, "Hello"), A)):
+        print("\t", x, ",")
+    print("]")

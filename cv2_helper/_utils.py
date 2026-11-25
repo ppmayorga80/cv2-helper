@@ -9,7 +9,9 @@ import secrets
 import numpy as np
 import cv2
 
-from ._types import TextAttr, TextPos, ImgOrListType
+from ._types import TextAttr, TextPos, ImgSpecClass, ImgSpecFullList
+
+GOLDEN_RATIO = (sqrt(5) - 1) / 2
 
 
 def _get_quasi_square(n: int) -> Tuple[int, int]:
@@ -29,7 +31,7 @@ def _get_quasi_square(n: int) -> Tuple[int, int]:
         return 1, 2
 
     rows, cols = 1, n
-    while not 0.6 < float(rows) / cols <= 1:
+    while not GOLDEN_RATIO < float(rows) / cols <= 1:
         for k in range(int(sqrt(n)), 0, -1):
             if n % k == 0:
                 rows, cols = k, n // k
@@ -99,40 +101,3 @@ def _get_text_info(
     return ta.org, ta.fontFace, ta.fontScale, ta.color, ta.thickness, ta.lineType
 
 
-def _normalize_img_or_list_type(img_or_list: ImgOrListType) -> ImgOrListType:
-    """Given a single image or list of: images | (image, str) | (image, str, TextAttr)
-    this function normalizes it to a list[(image,str,TextAttr] s.t. if no text or
-    attributes are given, an empty values are used
-
-    Args:
-        img_or_list: Image or list [image|(image,str)|(image,str,TextAttr)]
-
-    Returns:
-        The normalized list of image sequences where each element
-        has length 3 (image, str, TextAttr).
-
-    ---
-    Examples:
-        ```python
-            A=cv2.imread("./test.jpg")
-            X=_normalize_img_or_list_type(A)
-            Y=_normalize_img_or_list_type([(A,"HELLO")])
-            Z=_normalize_img_or_list_type([(A,"HELLO"),(A,"WORLD"), A])
-            # X = [[A,"",TextAttr()]]
-            # Y = [[A,"HELLO",TextAttr()]]
-            # Z = [[A,"HELLO",TextAttr()],[A,"WORLD",TextAttr()], [A,"",TextAttr()]]
-        ```
-    """
-    # 1. transform img_or_list to a list of tuples (ndarray,str,TextAttr).
-    img_or_list = [img_or_list] if isinstance(img_or_list, np.ndarray) else img_or_list
-    img_or_list = [
-        [x, "", TextAttr()] if isinstance(x, np.ndarray) else (
-            [x[0], "", TextAttr()] if isinstance(x, (list, tuple)) and len(x) == 1 else (
-                [x[0], x[1], TextAttr()] if isinstance(x, (list, tuple)) and len(x) == 2 else (
-                    [x[0], x[1], x[2]]
-                )
-            )
-        )
-        for x in img_or_list
-    ]
-    return img_or_list
