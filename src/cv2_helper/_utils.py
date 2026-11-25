@@ -6,10 +6,9 @@ from typing import Tuple
 
 import secrets
 
-import numpy as np
 import cv2
 
-from ._types import TextAttr, TextPos, ImgSpecClass, ImgSpecFullList
+from ._types import TextAttr, TextPos
 
 GOLDEN_RATIO = (sqrt(5) - 1) / 2
 
@@ -99,5 +98,3 @@ def _get_text_info(
             ta.org = (xl, yt)
 
     return ta.org, ta.fontFace, ta.fontScale, ta.color, ta.thickness, ta.lineType
-
-

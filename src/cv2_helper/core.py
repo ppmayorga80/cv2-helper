@@ -201,29 +201,40 @@ def imcomp(
     """
 
     # 1. transform img_or_list to a list of tuples (ndarray,str,TextAttr).
-    img_or_list = ImgSpecClass.normalize_to_list(img_or_list)
+    img_norm_list = ImgSpecClass.normalize_to_list(img_or_list)
+    img_list: list = [[x.img, x.label, x.ta] for x in img_norm_list]
 
-    # 2. ensure all images are of the same size
-    first_shape = img_or_list[0].img.shape[0:2]
-    if not all(x.img.shape[0:2] == first_shape for x in img_or_list):
-        imgs = [x.img for x in img_or_list]
-        imgs = resize(imgs, imgs[0], fx=1.0, fy=1.0, fill_color=fill_bg_color)
-        img_or_list = [
-            [img, x.label, x.ta]
-            for img, x in zip(imgs, img_or_list)
-        ]
+    rows, cols = shape[:2] if shape is not None else _get_quasi_square(len(img_list))
 
     # 2.1 ensure all images are BGR
-    for k in range(len(img_or_list)):
-        img = img_or_list[k].img
-        if img.ndim == 2:
-            img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
-            img_or_list[k].img = img
+    for item in img_list:
+        if item[0].ndim == 2:
+            item[0] = cv2.cvtColor(item[0], cv2.COLOR_GRAY2BGR)
+    # for k in range(len(img_list)):
+    #     img = img_list[k][0]
+    #     if img.ndim == 2:
+    #         img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
+    #         img_list[k][0] = img
+
+    # 2.2 ensure all images are of the same size
+    first_shape = img_list[0][0].shape[0:2]
+    if not all(img.shape[0:2] == first_shape for img, _, _ in img_list):
+        imgs = [img for img, _, _ in img_list]
+        imgs = resize(imgs, imgs[0], fx=1.0, fy=1.0, fill_color=fill_bg_color)
+        img_list = [
+            [img, label, ta]
+            for img, (_, label, ta) in zip(imgs, img_list)
+        ]
 
     # 3. add labels
-    imgs_with_labels = add_text(img_or_list)
+    imgs_with_labels = add_text(img_list)
 
-    # 4. ensure we have borders
+    # 4. add empty cells
+    im0 = imgs_with_labels[0]
+    bg_region = np.full(im0.shape, fill_value=fill_bg_color, dtype=im0.dtype)
+    imgs_with_labels += [bg_region for _ in range(rows * cols - len(imgs_with_labels))]
+
+    # 5. ensure we have borders
     if border > 0:
         border = int(border)
         if isinstance(border_color, int):
@@ -238,15 +249,7 @@ def imcomp(
 
         imgs_with_labels = add_borders(imgs_with_labels, border=border, border_color=border_color)
 
-    if shape is not None:
-        rows, cols = shape[:2]
-    else:
-        rows, cols = _get_quasi_square(len(imgs_with_labels))
-
-    im0 = imgs_with_labels[0].imag
-    bg_region = np.full(im0.shape, fill_value=fill_bg_color, dtype=im0.dtype)
-    imgs_with_labels += [bg_region for _ in range(rows * cols - len(imgs_with_labels))]
-
+    # 6. convert all images to one grid image
     grid = [imgs_with_labels[i * cols: (i + 1) * cols] for i in range(rows)]
     full_grid_image = np.vstack([np.hstack(row) for row in grid])
 
@@ -291,13 +294,13 @@ def wait_key(
 
 
 if __name__ == '__main__':
-    A=PreloadImages.COLOR.CAT_01
-    B=PreloadImages.COLOR.CAT_02
-    C=PreloadImages.COLOR.CAT_03
-    D=PreloadImages.GRAY.LENA
-    E=PreloadImages.BINARY.HORSE
+    A = PreloadImages.COLOR.CAT_01
+    B = PreloadImages.COLOR.CAT_02
+    C = PreloadImages.COLOR.CAT_03
+    D = PreloadImages.GRAY.LENA
+    E = PreloadImages.BINARY.HORSE
 
-    G0 = imcomp([A,B,C,D,E], border=1, border_color=(255,255,0), fill_bg_color=(127,127,127))
+    G0 = imcomp([A, B, C, D, E], border=1, border_color=(255, 255, 0), fill_bg_color=(127, 127, 127))
 
     cv2.imshow("G0", G0)
     cv2.waitKey(0)
